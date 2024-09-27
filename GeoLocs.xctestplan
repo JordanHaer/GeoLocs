@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "FE0F5B97-8405-4E7F-B3D8-46BA38288441",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "GeoLocsTests",
+        "name" : "GeoLocsTests"
+      }
+    }
+  ],
+  "version" : 1
+}

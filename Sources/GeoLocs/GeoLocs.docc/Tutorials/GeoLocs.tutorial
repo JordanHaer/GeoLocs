@@ -1,0 +1,11 @@
+@Tutorials(name: "GeoLocs") {
+    @Intro(title: "Integrating GeoLocs") {
+        Adding the GeoLocs iOS SDK to your iOS app.
+    }
+    
+    @Chapter(name: "Getting Started With GeoLocs SDK") {
+        @TutorialReference(tutorial: "doc:Getting-Started")
+        @Image(source: "file", alt: "accessible description")
+        How to add GeoLocs to your iOS app.
+    }
+}

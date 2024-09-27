@@ -1,0 +1,30 @@
+@Tutorial(time: 10) {
+    
+    @Intro(title: "Getting Started") { 
+        How to add GeoLocs to your iOS app.
+    }
+    
+    @Section(title: "Section 1 title") {
+        Foo
+        
+        @Steps {
+            @Step {
+                Import SwiftUI.
+                
+                Create a new SwiftUI View.
+                
+                @Code(name: "ContentView.swift", file: "01-getting-started-01-01.swift") {
+                    
+                }
+            }
+            
+            @Step {
+                Add a `font` view modifier.
+                
+                @Code(name: "ContentView.swift", file: "01-getting-started-01-02.swift") {
+                    
+                }
+            }
+        }
+    }
+}

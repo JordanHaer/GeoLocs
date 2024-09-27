@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 6.0
 
 import PackageDescription
 
@@ -8,16 +8,18 @@ let package = Package(
     products: [
         .library(
             name: "GeoLocs",
-            targets: ["GeoLocs"]),
+            type: .dynamic,
+            targets: ["GeoLocs"])
     ],
+    dependencies: [.package(url: "https://github.com/SimplyDanny/SwiftLintPlugins", from: "0.57.0")],
     targets: [
         .target(
             name: "GeoLocs",
             path: "./Sources/GeoLocs",
-            swiftSettings: [.enableExperimentalFeature("StrictConcurrency")]),
+            plugins: [.plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")]),
         .testTarget(
             name: "GeoLocsTests",
             dependencies: ["GeoLocs"],
-            path: "./Tests/GeoLocsTests"),
+            path: "./Tests/GeoLocsTests")
     ]
 )

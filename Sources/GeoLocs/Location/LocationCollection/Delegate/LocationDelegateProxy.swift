@@ -1,0 +1,77 @@
+import CoreLocation
+
+protocol LocationDelegateProxyProtocol: Actor {
+    func setLocationEventCallback(_ locationEventCallback: @escaping LocationEventCallback)
+    func perform(_ method: LocationDelegateMethod) async
+}
+
+final actor LocationDelegateProxy: LocationDelegateProxyProtocol {
+
+    private let locationStorage: LocationStorageAddProtocol
+    private let cLLocationManager: LocationAuthStatusProtocol
+
+    private var locationEventCallback: LocationEventCallback?
+
+    init(
+        locationStorage: LocationStorageAddProtocol,
+        cLLocationManager: LocationAuthStatusProtocol
+    ) {
+        self.locationStorage = locationStorage
+        self.cLLocationManager = cLLocationManager
+    }
+
+    func setLocationEventCallback(_ locationEventCallback: @escaping LocationEventCallback) {
+        self.locationEventCallback = locationEventCallback
+    }
+
+    func perform(_ method: LocationDelegateMethod) async {
+        switch method {
+        case .didUpdateLocations(let locations):
+            await didUpdateLocations(locations: locations)
+        case .didFailWithError(let error):
+            await didFailWithError(error: error)
+        case .didChangeAuthorization:
+            didChangeAuthorization()
+        }
+    }
+
+    private func didUpdateLocations(locations: [CLLocation]) async {
+        guard let location = locations.last else {
+            return await sendInvalidLocationEvent()
+        }
+
+        await sendValidLocationEvent(location)
+    }
+
+    private func didFailWithError(error: Error) async {
+        await sendInvalidLocationEvent()
+    }
+
+    private func didChangeAuthorization() {
+        let authStatus = LocationAuthStatus(cLLocationManager.locationAuthStatus)
+        let authStatusEvent = LocationEvent.permission(authStatus)
+        locationEventCallback?(authStatusEvent)
+    }
+
+    private func sendValidLocationEvent(_ location: CLLocation) async {
+        let newLocation = Location(
+            latitude: location.coordinate.latitude,
+            longitude: location.coordinate.longitude,
+            locationType: .async
+        )
+
+        let locationEvent = LocationEvent.valid(newLocation)
+
+        await sendLocationEvent(locationEvent)
+    }
+
+    private func sendInvalidLocationEvent() async {
+        let locationEvent = LocationEvent.invalid(.locationUnavailable)
+        await sendLocationEvent(locationEvent)
+    }
+
+    private func sendLocationEvent(_ locationEvent: LocationEvent) async {
+        await locationStorage.add(locationEvent)
+        locationEventCallback?(locationEvent)
+    }
+}
