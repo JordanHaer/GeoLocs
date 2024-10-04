@@ -1,10 +1,6 @@
 /// A protocol for the ``MGeo`` class.
 public protocol MGeoProtocol: Sendable {
 
-    typealias LocationAuthStatusCompletion = @Sendable (_ locationAuthStatus: LocationAuthStatus) -> Void
-
-    typealias SetupFinishedCompletion = @Sendable (_ setupFinished: Bool) -> Void
-
     /// The current version of the `GeoLocs` SDK.
     ///
     /// This constant holds the version number of the `GeoLocs` SDK as a string.
