@@ -20,6 +20,7 @@ let package = Package(
         .testTarget(
             name: "GeoLocsTests",
             dependencies: ["GeoLocs"],
-            path: "./Tests/GeoLocsTests")
+            path: "./Tests/GeoLocsTests",
+            plugins: [.plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")])
     ]
 )

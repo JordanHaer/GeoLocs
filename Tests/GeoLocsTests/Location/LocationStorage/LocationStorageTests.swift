@@ -7,7 +7,7 @@ struct LocationStorageTests {
     @Suite
     struct AddTests {
 
-        private let sut: LocationStorageProtocol
+        private let sut: LocationStorage
 
         init() {
             self.sut = LocationStorage()
@@ -66,7 +66,7 @@ struct LocationStorageTests {
     @Suite
     struct GetAllLocationEventsTests {
 
-        private let sut: LocationStorageProtocol
+        private let sut: LocationStorage
 
         init() {
             self.sut = LocationStorage()
@@ -98,7 +98,7 @@ struct LocationStorageTests {
     @Suite
     struct GetLatestLocationEventTests {
 
-        private let sut: LocationStorageProtocol
+        private let sut: LocationStorage
 
         init() {
             self.sut = LocationStorage()
@@ -125,7 +125,7 @@ struct LocationStorageTests {
     @Suite
     struct GetAllValidLocationEventsTests {
 
-        private let sut: LocationStorageProtocol
+        private let sut: LocationStorage
 
         init() {
             self.sut = LocationStorage()
@@ -183,7 +183,7 @@ struct LocationStorageTests {
     @Suite
     struct GetAllInValidLocationEventsTests {
 
-        private let sut: LocationStorageProtocol
+        private let sut: LocationStorage
 
         init() {
             self.sut = LocationStorage()

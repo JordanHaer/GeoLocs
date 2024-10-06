@@ -1,5 +1,6 @@
-import CoreLocation
 @testable import GeoLocs
+
+import CoreLocation
 
 final class MockLocationManagerDelegate: NSObject, LocationManagerDelegateProtocol {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {}

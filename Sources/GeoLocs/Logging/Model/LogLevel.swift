@@ -1,3 +1,5 @@
+import Foundation
+
 /// Defines the log level used within the SDK.
 ///
 /// This enum is used to control whether logging is enabled in the SDK.

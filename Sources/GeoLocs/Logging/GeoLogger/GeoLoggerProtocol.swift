@@ -36,6 +36,8 @@ protocol GeoLoggerProtocol: Sendable {
         function: String,
         line: Int
     )
+
+    func getLogLevel() -> LogLevel
 }
 
 extension GeoLoggerProtocol {

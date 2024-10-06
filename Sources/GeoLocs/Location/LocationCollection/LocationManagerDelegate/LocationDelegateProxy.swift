@@ -1,7 +1,6 @@
 import CoreLocation
 
 protocol LocationDelegateProxyProtocol: Actor {
-    func setLocationEventCallback(_ locationEventCallback: @escaping LocationEventCallback)
     func perform(_ method: LocationDelegateMethod) async
 }
 
@@ -9,18 +8,15 @@ final actor LocationDelegateProxy: LocationDelegateProxyProtocol {
 
     private let locationStorage: LocationStorageAddProtocol
     private let cLLocationManager: LocationAuthStatusProtocol
-
-    private var locationEventCallback: LocationEventCallback?
+    private let locationEventCallback: LocationEventCallback
 
     init(
         locationStorage: LocationStorageAddProtocol,
-        cLLocationManager: LocationAuthStatusProtocol
+        cLLocationManager: LocationAuthStatusProtocol,
+        locationEventCallback: @escaping LocationEventCallback
     ) {
         self.locationStorage = locationStorage
         self.cLLocationManager = cLLocationManager
-    }
-
-    func setLocationEventCallback(_ locationEventCallback: @escaping LocationEventCallback) {
         self.locationEventCallback = locationEventCallback
     }
 
@@ -50,7 +46,7 @@ final actor LocationDelegateProxy: LocationDelegateProxyProtocol {
     private func didChangeAuthorization() {
         let authStatus = LocationAuthStatus(cLLocationManager.locationAuthStatus)
         let authStatusEvent = LocationEvent.permission(authStatus)
-        locationEventCallback?(authStatusEvent)
+        locationEventCallback(authStatusEvent)
     }
 
     private func sendValidLocationEvent(_ location: CLLocation) async {
@@ -72,6 +68,6 @@ final actor LocationDelegateProxy: LocationDelegateProxyProtocol {
 
     private func sendLocationEvent(_ locationEvent: LocationEvent) async {
         await locationStorage.add(locationEvent)
-        locationEventCallback?(locationEvent)
+        locationEventCallback(locationEvent)
     }
 }

@@ -14,7 +14,6 @@ struct LocationManagerTests {
 
     init() {
         let cLLocationManager = MockCLLocationManager(mockLocationAuthStatus: .authorizedWhenInUse)
-        let mockGeoLogger = MockGeoLogger()
         let locationManagerDelegate = MockLocationManagerDelegate()
         let locationDelegateProxy = MockLocationDelegateProxy()
 
@@ -24,21 +23,9 @@ struct LocationManagerTests {
 
         self.sut = LocationManager(
             cLLocationManager: cLLocationManager,
-            geoLogger: mockGeoLogger,
             locationManagerDelegate: locationManagerDelegate,
             locationDelegateProxy: locationDelegateProxy
         )
-    }
-
-    @Test
-    func setLocationEventCallback() async {
-        await sut.setLocationEventCallback { _ in }
-
-        let setLocationEventCallbackWasCalled = await locationDelegateProxy.setLocationEventCallbackWasCalled
-        let requestWhenInUseAuthorizationWasCalled = clLocationManager.requestWhenInUseAuthorizationWasCalled
-
-        #expect(setLocationEventCallbackWasCalled == true)
-        #expect(requestWhenInUseAuthorizationWasCalled == true)
     }
 
     @Test

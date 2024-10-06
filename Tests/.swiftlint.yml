@@ -1,0 +1,8 @@
+analyzer_rules:
+    - unused_import
+    
+disabled_rules:
+    - identifier_name
+
+opt_in_rules:
+    - lower_acl_than_parent

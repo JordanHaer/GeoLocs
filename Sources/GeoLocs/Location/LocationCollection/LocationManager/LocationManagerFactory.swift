@@ -1,29 +1,26 @@
 import CoreLocation
 
-extension MGeo {
-    static func createMGeoDependencies(logLevel: LogLevel) -> MGeoDependencies {
-        let geoLogger = GeoLogger(logLevel: logLevel)
+protocol LocationManagerFactoryProtocol: Sendable {
+    func build(locationEventCallback: @escaping LocationEventCallback) -> LocationManagerProtocol
+}
 
+struct LocationManagerFactory: LocationManagerFactoryProtocol {
+    func build(locationEventCallback: @escaping LocationEventCallback) -> LocationManagerProtocol {
         let locationStorage = LocationStorage()
         let cLLocationManager = CLLocationManager()
 
         let locationDelegateProxy = LocationDelegateProxy(
             locationStorage: locationStorage,
-            cLLocationManager: cLLocationManager
+            cLLocationManager: cLLocationManager,
+            locationEventCallback: locationEventCallback
         )
 
         let locationManagerDelegate = LocationManagerDelegate(locationDelegateProxy: locationDelegateProxy)
 
-        let locationManager = LocationManager(
+        return LocationManager(
             cLLocationManager: cLLocationManager,
-            geoLogger: geoLogger,
             locationManagerDelegate: locationManagerDelegate,
             locationDelegateProxy: locationDelegateProxy
-        )
-
-        return .init(
-            geoLogger: geoLogger,
-            locationManager: locationManager
         )
     }
 }

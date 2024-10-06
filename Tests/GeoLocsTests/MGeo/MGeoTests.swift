@@ -4,18 +4,22 @@ import Testing
 @Suite
 struct MGeoTests {
 
-    static private let oneMillionNanoseconds: UInt64 = 1_000_000_000
-
     private let sut: MGeo
+
     private let mockLocationManager: MockLocationManager
 
+    private let locationEventCallback: LocationEventCallback = { _ in }
+
     init() {
-        let geoLogger = GeoLogger(logLevel: .debug)
         let mockLocationManager = MockLocationManager()
+
+        let geoLogger = MockGeoLogger(logLevel: .debug)
+        let mockLocationManagerFactory = MockLocationManagerFactory(locationManager: mockLocationManager)
+        let locationManagerContainer = LocationManagerContainer(locationManagerFactory: mockLocationManagerFactory)
 
         self.sut = .init(
             geoLogger: geoLogger,
-            locationManager: mockLocationManager
+            locationManagerContainer: locationManagerContainer
         )
 
         self.mockLocationManager = mockLocationManager
@@ -25,21 +29,32 @@ struct MGeoTests {
 
     @Test
     func WhenAsyncSetupIsCalled_ThenLocationManagerSetupIsCalled() async {
-        let locationEventCallback: LocationEventCallback = { _ in }
+        await #expect(throws: Never.self) {
+            try await sut.setup(locationEventCallback: locationEventCallback)
+        }
 
-        let setupFinished = await sut.setup(locationEventCallback: locationEventCallback)
-
-        #expect(setupFinished == true)
-
-        let setLocationEventCallbackWasCalled = await mockLocationManager.setLocationEventCallbackWasCalled
-        #expect(setLocationEventCallbackWasCalled)
+        let requestWhenInUseLocationPermissionWasCalled = await mockLocationManager.requestWhenInUseLocationPermissionWasCalled
+        #expect(requestWhenInUseLocationPermissionWasCalled)
     }
 
     @Test
-    func WhenAsyncRequestLocationAuthStatusIsCalled_ThenLocationManagerRequestLocationAuthStatusIsCalled() async {
+    func WhenAsyncSetupIsCalledTwice_ThenErrorIsThrownOnSecondcall() async {
+        await #expect(throws: Never.self) {
+            try await sut.setup(locationEventCallback: locationEventCallback)
+        }
+
+        await #expect(throws: MGeoError.setupAlreadyCalled) {
+            try await sut.setup(locationEventCallback: locationEventCallback)
+        }
+    }
+
+    @Test
+    func GivenSetupIsCalled_WhenAsyncRequestLocationAuthStatusIsCalled_ThenLocationManagerRequestLocationAuthStatusIsCalled() async throws {
+        try await sut.setup(locationEventCallback: locationEventCallback)
+
         let expectedLocationAuthStatus: LocationAuthStatus = .notDetermined
 
-        let actualLocationAuthStatus = await sut.requestLocationAuthStatus()
+        let actualLocationAuthStatus = try await sut.requestLocationAuthStatus()
 
         #expect(expectedLocationAuthStatus == actualLocationAuthStatus)
 
@@ -48,72 +63,52 @@ struct MGeoTests {
     }
 
     @Test
-    func WhenAsyncStartUpdatingLocationIsCalled_ThenLocationManagerStartUpdatingLocationIsCalled() async {
-        await sut.startUpdatingLocation()
+    func GivenSetupIsCalled_WhenAsyncStartUpdatingLocationIsCalled_ThenLocationManagerStartUpdatingLocationIsCalled() async throws {
+        try await sut.setup(locationEventCallback: locationEventCallback)
+
+        try await sut.startUpdatingLocation()
 
         let startUpdatingLocationWasCalled = await mockLocationManager.startUpdatingLocationWasCalled
         #expect(startUpdatingLocationWasCalled)
     }
 
     @Test
-    func WhenAsyncStopUpdatingLocationIsCalled_ThenLocationManagerStopUpdatingLocationIsCalled() async {
-        await sut.stopUpdatingLocation()
+    func GivenSetupIsCalled_WhenAsyncStopUpdatingLocationIsCalled_ThenLocationManagerStopUpdatingLocationIsCalled() async throws {
+        try await sut.setup(locationEventCallback: locationEventCallback)
+
+        try await sut.stopUpdatingLocation()
 
         let stopUpdatingLocationWasCalled = await mockLocationManager.stopUpdatingLocationWasCalled
         #expect(stopUpdatingLocationWasCalled)
     }
 
-    // MARK: Sync Tests
-
     @Test
-    func WhenSyncSetupIsCalled_ThenLocationManagerSetupIsCalled() throws {
-        let locationEventCallback: LocationEventCallback = { _ in }
-
-        sut.setup(locationEventCallback: locationEventCallback) { setupFinished in
-            #expect(setupFinished == true)
+    func GivenSetupIsNotYetCalled_WhenAsyncRequestLocationAuthStatusIsCalled_ThenErrorIsThrown() async {
+        await #expect(throws: MGeoError.setupNotCalledYet) {
+            try await sut.requestLocationAuthStatus()
         }
 
-        Task {
-            try await Task.sleep(nanoseconds: Self.oneMillionNanoseconds)
-            let setLocationEventCallbackWasCalled = await mockLocationManager.setLocationEventCallbackWasCalled
-            #expect(setLocationEventCallbackWasCalled)
-        }
+        let requestLocationAuthStatusWasCalled = await mockLocationManager.requestLocationAuthStatusWasCalled
+        #expect(requestLocationAuthStatusWasCalled == false)
     }
 
     @Test
-    func WhenSyncRequestLocationAuthStatusIsCalled_ThenLocationManagerRequestLocationAuthStatusIsCalled() throws {
-        let expectedLocationAuthStatus: LocationAuthStatus = .notDetermined
-
-        sut.requestLocationAuthStatus { actualLocationAuthStatus in
-            #expect(expectedLocationAuthStatus == actualLocationAuthStatus)
+    func GivenSetupIsNotYetCalled_WhenAsyncStartUpdatingLocationIsCalled_ThenErrorIsThrown() async {
+        await #expect(throws: MGeoError.setupNotCalledYet) {
+            try await sut.startUpdatingLocation()
         }
 
-        Task {
-            try await Task.sleep(nanoseconds: Self.oneMillionNanoseconds)
-            let requestLocationAuthStatusWasCalled = await mockLocationManager.requestLocationAuthStatusWasCalled
-            #expect(requestLocationAuthStatusWasCalled)
-        }
+        let startUpdatingLocationWasCalled = await mockLocationManager.startUpdatingLocationWasCalled
+        #expect(startUpdatingLocationWasCalled == false)
     }
 
     @Test
-    func WhenSyncStartUpdatingLocationIsCalled_ThenLocationManagerStartUpdatingLocationIsCalled() throws {
-        sut.startUpdatingLocation()
-
-        Task {
-            try await Task.sleep(nanoseconds: Self.oneMillionNanoseconds)
-            let startUpdatingLocationWasCalled = await mockLocationManager.startUpdatingLocationWasCalled
-            #expect(startUpdatingLocationWasCalled)
+    func GivenSetupIsNotYetCalled_WhenAsyncStopUpdatingLocationIsCalled_ThenErrorIsThrown() async {
+        await #expect(throws: MGeoError.setupNotCalledYet) {
+            try await sut.stopUpdatingLocation()
         }
-    }
 
-    @Test
-    func WhenSyncStopUpdatingLocationIsCalled_ThenLocationManagerStopUpdatingLocationIsCalled() throws {
-        sut.stopUpdatingLocation()
-
-        Task {
-            try await Task.sleep(nanoseconds: Self.oneMillionNanoseconds)
-            let stopUpdatingLocationWasCalled = await mockLocationManager.stopUpdatingLocationWasCalled
-            #expect(stopUpdatingLocationWasCalled)
-        }
+        let stopUpdatingLocationWasCalled = await mockLocationManager.stopUpdatingLocationWasCalled
+        #expect(stopUpdatingLocationWasCalled ==  false)
     }
 }

@@ -1,0 +1,6 @@
+analyzer_rules:
+    - unused_import
+
+opt_in_rules:
+    - lower_acl_than_parent
+    - sorted_imports

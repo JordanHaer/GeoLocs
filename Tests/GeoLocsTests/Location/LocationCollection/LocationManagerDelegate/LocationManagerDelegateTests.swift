@@ -12,7 +12,7 @@ struct LocationManagerDelegateTests {
 
     static private let mockCLLocation: CLLocation = .init(latitude: 0, longitude: 0)
 
-    private let sut: LocationManagerDelegateProtocol
+    private let sut: LocationManagerDelegate
     private let mockLocationDelegateProxy: MockLocationDelegateProxy
 
     private let mockCLLocationManager: CLLocationManager

@@ -2,18 +2,13 @@
 
 final actor MockLocationManager: LocationManagerProtocol {
 
-    private(set) var setLocationEventCallbackWasCalled = false
     private(set) var requestWhenInUseLocationPermissionWasCalled = false
     private(set) var requestLocationAuthStatusWasCalled = false
     private(set) var startUpdatingLocationWasCalled = false
     private(set) var stopUpdatingLocationWasCalled = false
 
-    func setLocationEventCallback(_ locationEventCallback: @escaping LocationEventCallback) {
-        setLocationEventCallbackWasCalled = true
-    }
-
     func requestWhenInUseLocationPermission() {
-        requestLocationAuthStatusWasCalled = true
+        requestWhenInUseLocationPermissionWasCalled = true
     }
 
     func requestLocationAuthStatus() -> LocationAuthStatus {

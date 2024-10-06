@@ -2,78 +2,71 @@ import CoreLocation
 
 public final class MGeo: MGeoProtocol {
 
-    public static let version: String = "0.0.2"
+    public static let version: String = "0.0.4"
 
     private let geoLogger: GeoLoggerProtocol
-    private let locationManager: LocationManagerProtocol
+    private let locationManagerContainer: LocationManagerContainerProtocol
 
-    public convenience init(
-        logLevel: LogLevel = .release
-    ) {
-        let dependencies = Self.createMGeoDependencies(logLevel: logLevel)
+    public convenience init(logLevel: LogLevel = .release) {
+        let geoLogger = GeoLogger(logLevel: logLevel)
+        let locationManagerFactory = LocationManagerFactory()
+        let locationManagerContainer = LocationManagerContainer(locationManagerFactory: locationManagerFactory)
 
         self.init(
-            geoLogger: dependencies.geoLogger,
-            locationManager: dependencies.locationManager
+            geoLogger: geoLogger,
+            locationManagerContainer: locationManagerContainer
         )
     }
 
     /// An internal initialiser used for unit and integration testing.
     init(
         geoLogger: GeoLoggerProtocol,
-        locationManager: LocationManagerProtocol
+        locationManagerContainer: LocationManagerContainerProtocol
     ) {
         self.geoLogger = geoLogger
-        self.locationManager = locationManager
+        self.locationManagerContainer = locationManagerContainer
     }
 
-    // MARK: Async functions
+    public func setup(locationEventCallback: @escaping LocationEventCallback) async throws(MGeoError) {
+        guard
+            await locationManagerContainer.getLocationManager() == nil
+        else {
+            throw .setupAlreadyCalled
+        }
 
-    public func setup(locationEventCallback: @escaping LocationEventCallback) async -> Bool {
-        await locationManager.setLocationEventCallback(locationEventCallback)
-        return true
+        let locationManager = await locationManagerContainer.makeLocationManager(
+            locationEventCallback: locationEventCallback
+        )
+        await locationManager.requestWhenInUseLocationPermission()
+        await setLocationManager(locationManager)
     }
 
-    public func requestLocationAuthStatus() async -> LocationAuthStatus {
-        await locationManager.requestLocationAuthStatus()
+    public func requestLocationAuthStatus() async throws(MGeoError) -> LocationAuthStatus {
+        let locationManager = try await unwrapLocationManager()
+        return await locationManager.requestLocationAuthStatus()
     }
 
-    public func startUpdatingLocation() async {
+    public func startUpdatingLocation() async throws(MGeoError) {
+        let locationManager = try await unwrapLocationManager()
         await locationManager.startUpdatingLocation()
     }
 
-    public func stopUpdatingLocation() async {
+    public func stopUpdatingLocation() async throws(MGeoError) {
+        let locationManager = try await unwrapLocationManager()
         await locationManager.stopUpdatingLocation()
     }
 
-    // MARK: Sync functions
-
-    public func setup(
-        locationEventCallback: @escaping LocationEventCallback,
-        setupFinishedHandler completion: @escaping SetupFinishedCompletion
-    ) {
-        Task {
-            let setupFinished = await setup(locationEventCallback: locationEventCallback)
-            completion(setupFinished)
-        }
+    private func setLocationManager(_ locationManager: LocationManagerProtocol) async {
+        await locationManagerContainer.setLocationManager(locationManager)
     }
 
-    public func requestLocationAuthStatus(_ completion: @escaping LocationAuthStatusCompletion) {
-        Task {
-            let locationAuthStatus = await requestLocationAuthStatus()
-            completion(locationAuthStatus)
+    private func unwrapLocationManager() async throws(MGeoError) -> LocationManagerProtocol {
+        guard
+            let locationManager = await locationManagerContainer.getLocationManager()
+        else {
+            throw .setupNotCalledYet
         }
-    }
 
-    public func startUpdatingLocation() {
-        Task {
-            await startUpdatingLocation()
-        }
-    }
-
-    public func stopUpdatingLocation() {
-        Task {
-            await stopUpdatingLocation()
-        }
+        return locationManager
     }
 }

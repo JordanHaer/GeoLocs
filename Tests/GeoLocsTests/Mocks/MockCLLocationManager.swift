@@ -1,5 +1,6 @@
-import CoreLocation
 @testable import GeoLocs
+
+import CoreLocation
 
 final class MockCLLocationManager: CLLocationManagerProtocol, @unchecked Sendable {
 

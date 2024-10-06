@@ -69,7 +69,7 @@ public extension Location {
     ///     ContentView(location: .dummyLocation)
     /// }
     /// ```
-    static let dummyLocation: Location = .init(
+    static let dummyLocation = Self(
         latitude: 1.234567,
         longitude: 7.654321,
         locationType: .mono
