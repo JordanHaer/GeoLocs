@@ -2,7 +2,7 @@ import CoreLocation
 
 public final class MGeo: MGeoProtocol {
 
-    public static let version: String = "0.0.4"
+    public static let version: String = "0.0.6"
 
     private let geoLogger: GeoLoggerProtocol
     private let locationManagerContainer: LocationManagerContainerProtocol

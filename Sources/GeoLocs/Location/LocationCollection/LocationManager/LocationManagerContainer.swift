@@ -1,5 +1,5 @@
 protocol LocationManagerContainerProtocol: Actor {
-    func makeLocationManager(locationEventCallback: @escaping LocationEventCallback) -> LocationManagerProtocol
+    func makeLocationManager(locationEventCallback: @escaping LocationEventCallback) async -> LocationManagerProtocol
     func getLocationManager() -> LocationManagerProtocol?
     func setLocationManager(_ locationManager: LocationManagerProtocol)
 }
@@ -14,6 +14,7 @@ final actor LocationManagerContainer: LocationManagerContainerProtocol {
         self.locationManagerFactory = locationManagerFactory
     }
 
+    @MainActor
     func makeLocationManager(locationEventCallback: @escaping LocationEventCallback) -> LocationManagerProtocol {
         locationManagerFactory.build(locationEventCallback: locationEventCallback)
     }

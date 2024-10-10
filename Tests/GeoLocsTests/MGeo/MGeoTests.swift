@@ -8,11 +8,11 @@ struct MGeoTests {
     private let mockLocationManager: MockLocationManager
     private let locationEventCallback: LocationEventCallback = { _ in }
 
-    init() {
+    init() async {
         let mockLocationManager = MockLocationManager()
 
         let geoLogger = MockGeoLogger(logLevel: .debug)
-        let mockLocationManagerFactory = MockLocationManagerFactory(locationManager: mockLocationManager)
+        let mockLocationManagerFactory = await MockLocationManagerFactory(locationManager: mockLocationManager)
         let locationManagerContainer = LocationManagerContainer(locationManagerFactory: mockLocationManagerFactory)
 
         self.sut = .init(

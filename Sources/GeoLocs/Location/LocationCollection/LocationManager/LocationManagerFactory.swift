@@ -1,5 +1,6 @@
 import CoreLocation
 
+@MainActor
 protocol LocationManagerFactoryProtocol: Sendable {
     func build(locationEventCallback: @escaping LocationEventCallback) -> LocationManagerProtocol
 }

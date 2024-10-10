@@ -7,9 +7,9 @@ struct LocationManagerContainerTests {
     private let sut: LocationManagerContainer
     private let mockLocationManager: MockLocationManager
 
-    init() {
+    init() async {
         let mockLocationManager = MockLocationManager()
-        let mockLocationManagerFactory = MockLocationManagerFactory(locationManager: mockLocationManager)
+        let mockLocationManagerFactory = await MockLocationManagerFactory(locationManager: mockLocationManager)
         self.sut = .init(locationManagerFactory: mockLocationManagerFactory)
         self.mockLocationManager = mockLocationManager
     }
