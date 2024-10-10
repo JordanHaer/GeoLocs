@@ -1,34 +1,34 @@
 import CoreLocation
 
-protocol LocationManagerDelegateProtocol: CLLocationManagerDelegate, Sendable {
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation])
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error)
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager)
+protocol CLDelegate: CLLocationManagerDelegate, Sendable {}
+
+protocol LocationManagerDelegateProtocol: CLDelegate {
+    var locationDelegateMethodStream: LocationDelegateMethodStream { get }
 }
 
 final class LocationManagerDelegate: NSObject, LocationManagerDelegateProtocol {
 
-    private let locationDelegateProxy: LocationDelegateProxyProtocol
+    let locationDelegateMethodStream: LocationDelegateMethodStream
 
-    init(locationDelegateProxy: LocationDelegateProxyProtocol) {
-        self.locationDelegateProxy = locationDelegateProxy
+    private let continuation: LocationDelegateMethodContinuation
+
+    init(
+        locationDelegateMethodStream: LocationDelegateMethodStream,
+        continuation: LocationDelegateMethodContinuation
+    ) {
+        self.locationDelegateMethodStream = locationDelegateMethodStream
+        self.continuation = continuation
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        Task {
-            await locationDelegateProxy.perform(.didUpdateLocations(locations: locations))
-        }
+        continuation.yield(.didUpdateLocations(locations: locations))
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        Task {
-            await locationDelegateProxy.perform(.didFailWithError(error: error))
-        }
+        continuation.yield(.didFailWithError(error: error))
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        Task {
-            await locationDelegateProxy.perform(.didChangeAuthorization)
-        }
+        continuation.yield(.didChangeAuthorization)
     }
 }

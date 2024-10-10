@@ -14,6 +14,8 @@ final actor MockLocationDelegateProxy: LocationDelegateProxyProtocol {
 
     private(set) var setLocationEventCallbackWasCalled = false
 
+    func listenForLocationManagerDelegate() async {}
+
     func perform(_ method: LocationDelegateMethod) {
         switch method {
         case .didUpdateLocations(let locations):

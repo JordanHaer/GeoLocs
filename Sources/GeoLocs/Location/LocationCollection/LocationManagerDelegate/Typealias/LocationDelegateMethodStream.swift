@@ -1,0 +1,1 @@
+typealias LocationDelegateMethodStream = AsyncStream<LocationDelegateMethod>

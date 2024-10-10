@@ -1,27 +1,36 @@
 import CoreLocation
 
 protocol LocationDelegateProxyProtocol: Actor {
-    func perform(_ method: LocationDelegateMethod) async
+    func listenForLocationManagerDelegate() async
 }
 
 final actor LocationDelegateProxy: LocationDelegateProxyProtocol {
 
     private let locationStorage: LocationStorageAddProtocol
     private let cLLocationManager: LocationAuthStatusProtocol
+    private let locationManagerDelegate: LocationManagerDelegateProtocol
     private let locationEventCallback: LocationEventCallback
 
     init(
         locationStorage: LocationStorageAddProtocol,
         cLLocationManager: LocationAuthStatusProtocol,
+        locationManagerDelegate: LocationManagerDelegateProtocol,
         locationEventCallback: @escaping LocationEventCallback
     ) {
         self.locationStorage = locationStorage
         self.cLLocationManager = cLLocationManager
+        self.locationManagerDelegate = locationManagerDelegate
         self.locationEventCallback = locationEventCallback
     }
 
-    func perform(_ method: LocationDelegateMethod) async {
-        switch method {
+    func listenForLocationManagerDelegate() async {
+        for await locationDelegateMethod in locationManagerDelegate.locationDelegateMethodStream {
+            await perform(locationDelegateMethod)
+        }
+    }
+
+    private func perform(_ locationDelegateMethod: LocationDelegateMethod) async {
+        switch locationDelegateMethod {
         case .didUpdateLocations(let locations):
             await didUpdateLocations(locations: locations)
         case .didFailWithError(let error):

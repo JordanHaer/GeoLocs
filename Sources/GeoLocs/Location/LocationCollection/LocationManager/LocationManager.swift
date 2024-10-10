@@ -15,12 +15,12 @@ final actor LocationManager: LocationManagerProtocol {
 
     private var cLLocationManager: CLLocationManagerProtocol
 
-    private let locationManagerDelegate: LocationManagerDelegateProtocol
+    private let locationManagerDelegate: CLDelegate
     private let locationDelegateProxy: LocationDelegateProxyProtocol
 
     init(
         cLLocationManager: CLLocationManagerProtocol,
-        locationManagerDelegate: LocationManagerDelegateProtocol,
+        locationManagerDelegate: CLDelegate,
         locationDelegateProxy: LocationDelegateProxyProtocol
     ) {
         self.cLLocationManager = cLLocationManager
@@ -30,6 +30,10 @@ final actor LocationManager: LocationManagerProtocol {
         self.cLLocationManager.desiredAccuracy = kCLLocationAccuracyBest
         self.cLLocationManager.distanceFilter = kCLDistanceFilterNone
         self.cLLocationManager.delegate = locationManagerDelegate
+
+        Task {
+            await locationDelegateProxy.listenForLocationManagerDelegate()
+        }
     }
 
     func requestWhenInUseLocationPermission() {

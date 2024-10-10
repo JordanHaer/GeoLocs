@@ -5,9 +5,7 @@ import Testing
 struct MGeoTests {
 
     private let sut: MGeo
-
     private let mockLocationManager: MockLocationManager
-
     private let locationEventCallback: LocationEventCallback = { _ in }
 
     init() {
@@ -21,7 +19,6 @@ struct MGeoTests {
             geoLogger: geoLogger,
             locationManagerContainer: locationManagerContainer
         )
-
         self.mockLocationManager = mockLocationManager
     }
 

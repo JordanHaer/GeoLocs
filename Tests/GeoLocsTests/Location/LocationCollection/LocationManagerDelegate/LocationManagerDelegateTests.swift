@@ -10,76 +10,65 @@ struct LocationManagerDelegateTests {
         case mockError
     }
 
-    static private let mockCLLocation: CLLocation = .init(latitude: 0, longitude: 0)
-
-    private let sut: LocationManagerDelegate
-    private let mockLocationDelegateProxy: MockLocationDelegateProxy
-
+    private let mockCLLocation: CLLocation = .init(latitude: 0, longitude: 0)
     private let mockCLLocationManager: CLLocationManager
-    private let oneMillionNanoseconds: UInt64 = 1_000_000_000
+    private let locationDelegateMethodStream: LocationDelegateMethodStream
+    private let sut: LocationManagerDelegate
 
     init() {
-        let mockLocationDelegateProxy = MockLocationDelegateProxy()
+        let (locationDelegateMethodStream, continuation) = AsyncStream.makeStream(of: LocationDelegateMethod.self)
 
-        self.sut = LocationManagerDelegate(locationDelegateProxy: mockLocationDelegateProxy)
-        self.mockLocationDelegateProxy = mockLocationDelegateProxy
-        self.mockCLLocationManager = CLLocationManager()
+        self.mockCLLocationManager = .init()
+        self.locationDelegateMethodStream = locationDelegateMethodStream
+        self.sut = LocationManagerDelegate(
+            locationDelegateMethodStream: locationDelegateMethodStream,
+            continuation: continuation
+        )
     }
 
     @Test
-    func didUpdateLocationsIsCalled() async throws {
-        sut.locationManager(mockCLLocationManager, didUpdateLocations: [Self.mockCLLocation])
+    func locationPassedToDelegateProxy() async {
+        sut.locationManager(mockCLLocationManager, didUpdateLocations: [mockCLLocation])
 
-        try await Task.sleep(nanoseconds: oneMillionNanoseconds)
-
-        let didUpdateLocationsWasCalled = await mockLocationDelegateProxy.didUpdateLocationsWasCalled
-
-        #expect(didUpdateLocationsWasCalled)
-    }
-
-    @Test
-    func locationPassedToDelegateProxy() async throws {
-        sut.locationManager(mockCLLocationManager, didUpdateLocations: [Self.mockCLLocation])
-
-        try await Task.sleep(nanoseconds: oneMillionNanoseconds)
-
-        let optionalLocations = await mockLocationDelegateProxy.locations
-        let locations = try #require(optionalLocations)
-
-        #expect(locations == [Self.mockCLLocation])
-    }
-
-    @Test
-    func didFailWithErrorIsCalled() async throws {
-        sut.locationManager(mockCLLocationManager, didFailWithError: MockCLError.mockError)
-
-        try await Task.sleep(nanoseconds: oneMillionNanoseconds)
-
-        let didFailWithErrorWasCalled = await mockLocationDelegateProxy.didFailWithErrorWasCalled
-
-        #expect(didFailWithErrorWasCalled)
+        for await locationDelegateMethod in locationDelegateMethodStream {
+            switch locationDelegateMethod {
+            case let .didUpdateLocations(locations: locations):
+                #expect(locations == [mockCLLocation])
+            default:
+                Issue.record()
+            }
+            break
+        }
     }
 
     @Test
     func errorPassedToDelegateProxy() async throws {
         sut.locationManager(mockCLLocationManager, didFailWithError: MockCLError.mockError)
 
-        try await Task.sleep(nanoseconds: oneMillionNanoseconds)
-
-        let optionalError = await mockLocationDelegateProxy.error
-        let error = try #require(optionalError as? MockCLError)
-
-        #expect(error == MockCLError.mockError)
+        for await locationDelegateMethod in locationDelegateMethodStream {
+            switch locationDelegateMethod {
+            case let .didFailWithError(error: error):
+                let mockCLError = try #require(error as? MockCLError)
+                #expect(mockCLError == MockCLError.mockError)
+            default:
+                Issue.record()
+            }
+            break
+        }
     }
 
     @Test
-    func didChangeAuthorization() async throws {
+    func didChangeAuthorization() async {
         sut.locationManagerDidChangeAuthorization(mockCLLocationManager)
 
-        try await Task.sleep(nanoseconds: oneMillionNanoseconds)
-
-        let didChangeAuthorizationWasCalled = await mockLocationDelegateProxy.didChangeAuthorizationWasCalled
-
-        #expect(didChangeAuthorizationWasCalled)
+        for await locationDelegateMethod in locationDelegateMethodStream {
+            switch locationDelegateMethod {
+            case .didChangeAuthorization:
+                break
+            default:
+                Issue.record()
+            }
+            break
+        }
     }
 }

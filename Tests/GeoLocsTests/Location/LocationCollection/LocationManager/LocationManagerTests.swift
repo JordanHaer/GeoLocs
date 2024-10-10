@@ -8,23 +8,25 @@ struct LocationManagerTests {
 
     private let clLocationManager: MockCLLocationManager
     private let locationManagerDelegate: MockLocationManagerDelegate
-    private let locationDelegateProxy: MockLocationDelegateProxy
-
+    private let locationDelegateProxy: MockCLDelegate
+    private let mockLocationDelegateProxy: MockLocationDelegateProxy
     private let sut: LocationManager
 
     init() {
         let cLLocationManager = MockCLLocationManager(mockLocationAuthStatus: .authorizedWhenInUse)
         let locationManagerDelegate = MockLocationManagerDelegate()
-        let locationDelegateProxy = MockLocationDelegateProxy()
+        let locationDelegateProxy = MockCLDelegate()
+        let mockLocationDelegateProxy = MockLocationDelegateProxy()
 
         self.clLocationManager = cLLocationManager
         self.locationManagerDelegate = locationManagerDelegate
         self.locationDelegateProxy = locationDelegateProxy
+        self.mockLocationDelegateProxy = mockLocationDelegateProxy
 
         self.sut = LocationManager(
             cLLocationManager: cLLocationManager,
             locationManagerDelegate: locationManagerDelegate,
-            locationDelegateProxy: locationDelegateProxy
+            locationDelegateProxy: mockLocationDelegateProxy
         )
     }
 

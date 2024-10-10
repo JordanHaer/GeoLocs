@@ -1,11 +1,25 @@
 import Testing
 @testable import GeoLocs
 
+import CoreLocation
+
 @Suite
 struct LocationDelegateProxyTests: Sendable {
 
     private enum MockCLError: Error {
         case mockError
+    }
+
+    private let locationManagerDelegate: LocationManagerDelegate
+    private let continuation: LocationDelegateMethodContinuation
+
+    init() {
+        let (locationDelegateMethodStream, continuation) = AsyncStream.makeStream(of: LocationDelegateMethod.self)
+        self.locationManagerDelegate = .init(
+            locationDelegateMethodStream: locationDelegateMethodStream,
+            continuation: continuation
+        )
+        self.continuation = continuation
     }
 
     @Test
@@ -14,7 +28,8 @@ struct LocationDelegateProxyTests: Sendable {
 
         let sut = makeLocationDelegateProxy(expectedLocationEvent: expectedLocationEvent)
 
-        await sut.perform(.didUpdateLocations(locations: [.init(latitude: 0, longitude: 0)]))
+        continuation.yield(.didUpdateLocations(locations: [.init(latitude: 0, longitude: 0)]))
+        await sut.listenForLocationManagerDelegate()
     }
 
     @Test
@@ -23,7 +38,8 @@ struct LocationDelegateProxyTests: Sendable {
 
         let sut = makeLocationDelegateProxy(expectedLocationEvent: expectedLocationEvent)
 
-        await sut.perform(.didUpdateLocations(locations: []))
+        continuation.yield(.didUpdateLocations(locations: []))
+        await sut.listenForLocationManagerDelegate()
     }
 
     @Test
@@ -32,7 +48,8 @@ struct LocationDelegateProxyTests: Sendable {
 
         let sut = makeLocationDelegateProxy(expectedLocationEvent: expectedLocationEvent)
 
-        await sut.perform(.didFailWithError(error: MockCLError.mockError))
+        continuation.yield(.didFailWithError(error: MockCLError.mockError))
+        await sut.listenForLocationManagerDelegate()
     }
 
     @Test
@@ -41,19 +58,23 @@ struct LocationDelegateProxyTests: Sendable {
 
         let sut = makeLocationDelegateProxy(expectedLocationEvent: expectedLocationEvent)
 
-        await sut.perform(.didChangeAuthorization)
+        continuation.yield(.didChangeAuthorization)
+        await sut.listenForLocationManagerDelegate()
     }
 
     private func makeLocationDelegateProxy(expectedLocationEvent: LocationEvent) -> LocationDelegateProxy {
         let mockLocationStorage = MockLocationStorage()
         let mockCLLocationManager = MockLocationAuthStatus(mockLocationAuthStatus: .authorizedWhenInUse)
+
         let locationEventCallback: LocationEventCallback = { locationEvent in
             #expect(expectedLocationEvent == locationEvent)
+            continuation.finish()
         }
 
         return .init(
             locationStorage: mockLocationStorage,
             cLLocationManager: mockCLLocationManager,
+            locationManagerDelegate: locationManagerDelegate,
             locationEventCallback: locationEventCallback
         )
     }

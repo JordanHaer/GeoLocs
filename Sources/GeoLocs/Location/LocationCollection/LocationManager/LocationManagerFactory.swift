@@ -6,16 +6,22 @@ protocol LocationManagerFactoryProtocol: Sendable {
 
 struct LocationManagerFactory: LocationManagerFactoryProtocol {
     func build(locationEventCallback: @escaping LocationEventCallback) -> LocationManagerProtocol {
+        let (locationDelegateMethodStream, continuation) = AsyncStream.makeStream(of: LocationDelegateMethod.self)
+        let locationManagerDelegate = LocationManagerDelegate(
+            locationDelegateMethodStream: locationDelegateMethodStream,
+            continuation: continuation
+        )
+
         let locationStorage = LocationStorage()
+
         let cLLocationManager = CLLocationManager()
 
         let locationDelegateProxy = LocationDelegateProxy(
             locationStorage: locationStorage,
             cLLocationManager: cLLocationManager,
+            locationManagerDelegate: locationManagerDelegate,
             locationEventCallback: locationEventCallback
         )
-
-        let locationManagerDelegate = LocationManagerDelegate(locationDelegateProxy: locationDelegateProxy)
 
         return LocationManager(
             cLLocationManager: cLLocationManager,
